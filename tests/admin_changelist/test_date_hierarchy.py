@@ -22,6 +22,9 @@ class DateHierarchyTests(TestCase):
         request.user = self.superuser
         changelist = EventAdmin(Event, custom_site).get_changelist_instance(request)
         _, _, lookup_params, _ = changelist.get_filters(request)
+        sql = (str(changelist.queryset.query))
+        self.assertIn('"admin_changelist_event"."event_date" >= %s' % expected_from_date.date().isoformat(), sql)
+        self.assertIn('"admin_changelist_event"."event_date" < %s' % expected_to_date.date().isoformat(), sql)
         self.assertEqual(lookup_params['date__gte'], expected_from_date)
         self.assertEqual(lookup_params['date__lt'], expected_to_date)
 
@@ -44,6 +47,11 @@ class DateHierarchyTests(TestCase):
                 {'year': 2017, 'month': 2, 'day': 28},
                 make_aware(datetime(2017, 2, 28)),
                 make_aware(datetime(2017, 3, 1)),
+            )
+            self.assertDateParams(
+                {'year': 2019, 'month': 10},
+                make_aware(datetime(2019, 10, 1)),
+                make_aware(datetime(2019, 11, 1)),
             )
 
     def test_invalid_params(self):
